@@ -75,6 +75,3 @@ Both binaries are fully static (no dependencies) for maximum Kindle compatibilit
 - Converted files use `STORED` (uncompressed) ZIP method, so output files may be larger than the original
 - Works on Kindle Paperwhite and other KUAL-compatible Kindles
 
-## License
-
-MIT
