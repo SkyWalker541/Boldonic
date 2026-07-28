@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension>
+	<information>
+		<name>Boldonic Reading</name>
+		<version>1.0.0</version>
+		<author>Luke</author>
+		<id>boldonic</id>
+		<description>Convert EPUB ebooks to Boldonic format with configurable word highlighting</description>
+	</information>
+	<menus>
+		<menu type="json" dynamic="true">menu.json</menu>
+	</menus>
+</extension>

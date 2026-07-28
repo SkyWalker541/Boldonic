@@ -1,0 +1,5 @@
+{
+	"items": [
+		{"name": "Boldonic Reading", "action": "sh run.sh"}
+	]
+}
