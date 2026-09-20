@@ -1,77 +1,41 @@
-# Boldonic Reading
+# Boldonic
 
-A Kindle extension that converts EPUB ebooks with configurable word highlighting. The first portion of each word is bolded to create visual fixation points, helping improve reading speed and focus.
+**Boldonic** is a KOReader plugin that re-renders EPUB ebooks with a larger share of each word in bold — an assistive reading comfort feature. It makes text easier to read by bolding the first characters of each word, guiding the eye through the text.
 
 ## Features
 
-- Bold the first ~40% of each word (configurable 10-90%)
-- Convert EPUBs directly on your Kindle
-- Create new converted files or replace originals
-- Simple file browser starting at `/mnt/us/`
-
-## Requirements
-
-- Kindle with KUAL installed
-- [kterm](https://www.mobileread.com/forums/forumdisplay.php?f=2235) (terminal app for Kindle)
+- **Smart bolding engine** — Bolds the leading portion of each word (configurable ratio 10–90%), preserving readability while adding visual weight
+- **Two conversion modes:**
+  - **Copy original** (default) — Creates a `<book>_boldonic.epub` sibling file, keeps original untouched
+  - **Replace original** — Rewrites the file in place, preserving reading progress & annotations
+- **Flexible output** — Save copies next to the original or in any folder on the device
+- **Full-screen dashboard** — Storefront-style UI with three tabs:
+  - **Convert A File** — Device-wide EPUB picker with search, multi-select, real titles
+  - **Settings** — Ratio, mode, destination folder
+  - **About** — Version & how it works
+- **Persistent conversion log** — Tracks converted books across folders, survives plugin updates
+- **Duplicate protection** — Flags already-converted books, confirms before re-converting
+- **Offline & private** — No network access, everything runs on-device
 
 ## Installation
 
-1. Download or clone this repository
-2. Connect your Kindle via USB
-3. Copy the `BoldonicReading` folder to `/mnt/us/extensions/` on your Kindle
-4. Eject your Kindle
-5. Launch KUAL from your Kindle's menu, then select **Boldonic Reading**
-
-Your Kindle's extensions folder should look like:
-
-```
-/mnt/us/extensions/
-└── BoldonicReading/
-    ├── config.xml
-    ├── menu.json
-    ├── run.sh
-    └── bin/
-        ├── boldonic
-        ├── boldonic.c
-        ├── boldonic.sh
-        ├── epubzip
-        ├── process_epub.sh
-        └── settings.sh
-```
+1. Download the latest `boldonic.koplugin.zip` from [Releases](https://github.com/SkyWalker541/Boldonic/releases)
+2. Unzip into `koreader/plugins/` on your device so you have `koreader/plugins/boldonic.koplugin/`
+3. Restart KOReader
+4. Open the menu → **Boldonic** to open the dashboard
 
 ## Usage
 
-1. Open KUAL and select **Boldonic Reading**
-2. Browse to your EPUB file (starts at `/mnt/us/`)
-3. Select a file and choose an output option:
-   - **Option 1** — Create a new file in `/mnt/us/Boldonic Books/` (keeps original)
-   - **Option 2** — Replace the original file (preserves Kindle reading history)
-4. Adjust the bold ratio in Settings if desired (default: 40%)
+1. Open the **Boldonic** dashboard from the menu
+2. **Convert A File** tab — Tap "Click Here To Convert File(s)" to pick EPUBs, or tap the "Currently open" row for one-tap conversion
+3. **Settings** tab — Adjust bolding ratio, choose copy/replace mode, set output folder
+4. **About** tab — Version info & how it works
 
-## Building from Source
+## Requirements
 
-The ARM binaries are pre-built, but if you need to recompile:
+- KOReader with `ffi/archiver` support (standard on recent builds)
+- EPUB files (other formats not supported)
 
-```sh
-# Requires zig (or any ARM cross-compiler)
-zig cc -target arm-linux-musleabi -static -O2 -o bin/boldonic bin/boldonic.c
-zig cc -target arm-linux-musleabi -static -O2 -o bin/epubzip bin/epubzip.c
-```
+## License
 
-Both binaries are fully static (no dependencies) for maximum Kindle compatibility.
-
-## How It Works
-
-`boldonic.c` — Parses XHTML/HTML, identifies word boundaries (supports UTF-8), and wraps the first N characters of each word in `<b>` tags.
-
-`epubzip.c` — Re-packages the extracted EPUB directory into a valid ZIP/EPUB file with the mimetype entry stored uncompressed as required by the EPUB specification.
-
-`process_epub.sh` — Orchestrates the pipeline: extract EPUB, process all content files, repackage.
-
-## Notes
-
-- Only processes non-DRM EPUB files
-- Original EPUB files are never modified unless you choose "Replace original"
-- Converted files use `STORED` (uncompressed) ZIP method, so output files may be larger than the original
-- Works on Kindle Paperwhite and other KUAL-compatible Kindles
-
+MIT — see [LICENSE](LICENSE)
