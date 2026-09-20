@@ -62,7 +62,7 @@ local BOLDONIC = WidgetContainer:extend{
     is_doc_only = false,
     -- Shown at the bottom of the Settings tab so the running build is always
     -- identifiable on the device (KOReader loads plugins once at startup).
-    VERSION = "1.0.2",
+    VERSION = "1.0.3",
 }
 
 -- ─────────────────────────────── settings ────────────────────────────────
