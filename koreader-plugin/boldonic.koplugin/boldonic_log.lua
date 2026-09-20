@@ -2,34 +2,42 @@
 -- Stored in KOReader's data directory, survives plugin updates
 
 local lfs = require("libs/libkoreader-lfs")
-local json = require("json")
 local logger = require("logger")
+
+-- Try to load optional modules, handle gracefully if unavailable
+local ok_json, json = pcall(require, "json")
+local ok_storage, storage = pcall(require, "storage")
 
 local Log = {}
 
 -- Log file lives in KOReader's data directory (survives plugin updates)
 local function log_dir()
-    local storage = require("storage")
+    if not ok_storage or not storage then return nil end
     local dir = storage.getDir() .. "/plugins/data/boldonic"
     return dir
 end
 
 local function log_path()
-    return log_dir() .. "/conversions.json"
+    local dir = log_dir()
+    if not dir then return nil end
+    return dir .. "/conversions.json"
 end
 
 -- Ensure log directory exists
 local function ensure_dir()
     local dir = log_dir()
+    if not dir then return false end
     if not lfs.attributes(dir, "mode") then
-        lfs.mkdir(dir)
+        return lfs.mkdir(dir)
     end
+    return true
 end
 
 -- Load log from disk (returns table, never nil)
 function Log.load()
-    ensure_dir()
+    if not ok_json or not json or not ensure_dir() then return {} end
     local path = log_path()
+    if not path then return {} end
     local f = io.open(path, "r")
     if not f then return {} end
     local content = f:read("*a")
@@ -43,8 +51,9 @@ end
 
 -- Save log to disk (atomic write)
 function Log.save(data)
-    ensure_dir()
+    if not ok_json or not json or not ensure_dir() then return false end
     local path = log_path()
+    if not path then return false end
     local tmp = path .. ".tmp"
     local f = io.open(tmp, "w")
     if not f then return false, "could not open log for writing" end
@@ -60,6 +69,7 @@ end
 
 -- Check if a source book has been converted (log + verify file exists)
 function Log.isConverted(source_path)
+    if not ok_json then return false end
     local log = Log.load()
     local entry = log[source_path]
     if not entry then return false end
@@ -73,6 +83,7 @@ end
 
 -- Record a successful conversion
 function Log.record(source_path, output_path, mode, ratio, title)
+    if not ok_json then return false end
     local log = Log.load()
     log[source_path] = {
         output_path = output_path,
@@ -86,6 +97,7 @@ end
 
 -- Remove stale entries (output file missing) — call on picker open
 function Log.sync()
+    if not ok_json then return false end
     local log = Log.load()
     local changed = false
     for src, entry in pairs(log) do
@@ -107,6 +119,7 @@ end
 
 -- Delete a record (if user wants to "unconvert" tracking)
 function Log.delete(source_path)
+    if not ok_json then return false end
     local log = Log.load()
     if log[source_path] then
         log[source_path] = nil

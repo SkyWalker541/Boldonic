@@ -1019,7 +1019,7 @@ function PickerDialog:init()
     end
     self.frame = self:buildStandalone()
     self[1] = self.frame
-    if self.plugin and self.plugin.syncLog then self.plugin:syncLog() end
+    pcall(function() if self.plugin and self.plugin.syncLog then self.plugin:syncLog() end end)
     if not self.dimen then
         self.dimen = Geom:new{
             w = Device.screen:getWidth(),
@@ -1043,7 +1043,7 @@ function PickerDialog:renderInto(vg, area_w, area_h)
     if area_w then self.row_w = area_w end
     if area_h then self.content_h = area_h end
     self:ensureBooks()
-    if self.plugin and self.plugin.syncLog then self.plugin:syncLog() end
+    pcall(function() if self.plugin and self.plugin.syncLog then self.plugin:syncLog() end end)
     table.insert(vg, self:buildContent())
 end
 
