@@ -26,42 +26,53 @@ end
 -- (the caller picks the final path; replace-original callers write to a temp
 -- name and rename). Returns (true) or (nil, err).
 function Convert.file(src, dest, ratio, on_entry)
-    local Arch = require("ffi/archiver")
-    local reader = Arch.Reader:new()
-    if not reader:open(src) then
-        return nil, "could not open the book (is it a valid EPUB?)"
+    local ok_arch, Arch = pcall(require, "ffi/archiver")
+    if not ok_arch or not Arch then
+        return nil, "ffi/archiver module unavailable"
     end
 
-    local writer = Arch.Writer:new()
-    if not writer:open(dest, "epub") then
-        reader:close()
-        return nil, "could not create the converted file at " .. tostring(dest)
-    end
-    writer:setZipCompression("deflate")
-
-    local ok, err = true, nil
-    for entry in reader:iterate() do
-        if entry.mode == "file" then
-            local content = reader:extractToMemory(entry.path)
-            if content == nil then
-                ok, err = false, reader.err or ("could not read " .. tostring(entry.path))
-                break
-            end
-            if is_content_file(entry.path) then
-                content = Boldify.process(content, ratio)
-            end
-            if not writer:addFileFromMemory(entry.path, content, entry.mtime) then
-                ok, err = false, writer.err or ("could not write " .. tostring(entry.path))
-                break
-            end
-            if on_entry then on_entry(entry.path) end
+    local ok, err = pcall(function()
+        local reader = Arch.Reader:new()
+        if not reader:open(src) then
+            error("could not open the book (is it a valid EPUB?)")
         end
-    end
 
-    writer:close()
-    reader:close()
+        local writer = Arch.Writer:new()
+        if not writer:open(dest, "epub") then
+            reader:close()
+            error("could not create the converted file at " .. tostring(dest))
+        end
+        writer:setZipCompression("deflate")
+
+        local ok2, err2 = true, nil
+        for entry in reader:iterate() do
+            if entry.mode == "file" then
+                local content = reader:extractToMemory(entry.path)
+                if content == nil then
+                    ok2, err2 = false, reader.err or ("could not read " .. tostring(entry.path))
+                    break
+                end
+                if is_content_file(entry.path) then
+                    content = Boldify.process(content, ratio)
+                end
+                if not writer:addFileFromMemory(entry.path, content, entry.mtime) then
+                    ok2, err2 = false, writer.err or ("could not write " .. tostring(entry.path))
+                    break
+                end
+                if on_entry then on_entry(entry.path) end
+            end
+        end
+
+        writer:close()
+        reader:close()
+
+        if not ok2 then
+            error(err2 or "conversion failed")
+        end
+    end)
 
     if not ok then
+        -- Clean up partial output on error
         os.remove(dest)
         return nil, err or "conversion failed"
     end

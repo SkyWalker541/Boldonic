@@ -265,18 +265,15 @@ end
 -- the original, then renames it over the original — the path never changes.
 -- Returns (true) or (nil, err).
 function BOLDONIC:convertOne(path, ratio)
-    local ok, Convert = pcall(require, "boldonic_convert")
-    if not ok then
-        return nil, "conversion module unavailable"
-    end
+    local Convert = require("boldonic_convert")
     ratio = ratio or self:ratio()
     if self:mode() == "replace" then
         local dir = tostring(path):match("^(.*)/[^/]+$") or "."
         local base = tostring(path):match("([^/]+)$") or path
         local stem = base:match("^(.*)%.[^.]+$") or base
         local tmp = dir .. "/." .. stem .. ".boldonic.tmp"
-        local ok, err = pcall(function() return Convert.file(path, tmp, ratio) end)
-        if not ok then return nil, err or "conversion failed" end
+        local ok, err = Convert.file(path, tmp, ratio)
+        if not ok then return nil, err end
         if lfs.rename(tmp, path) then
             return true
         end
@@ -293,8 +290,8 @@ function BOLDONIC:convertOne(path, ratio)
     local dest_base = out:match("([^/]+)$") or out
     local dest_stem = dest_base:match("^(.*)%.[^.]+$") or dest_base
     local tmp_out = out_dir .. "/." .. dest_stem .. ".boldonic.tmp"
-    local ok, err = pcall(function() return Convert.file(path, tmp_out, ratio) end)
-    if not ok then return nil, err or "conversion failed" end
+    local ok, err = Convert.file(path, tmp_out, ratio)
+    if not ok then return nil, err end
     if lfs.rename(tmp_out, out) then
         pcall(function()
             local title = ""
