@@ -1,0 +1,30 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lua syntax check + harness
+        run: |
+          sudo apt-get update && sudo apt-get install -y luajit
+          for f in koreader-plugin/boldonic.koplugin/*.lua; do
+            luajit -bl "$f" >/dev/null
+          done
+          luajit koreader-plugin/test/harness_boldonic.lua
+
+      - name: Build release zip
+        run: ./scripts/build-zip.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Boldonic-Plugin
+          path: releases/*.zip
+          if-no-files-found: error
