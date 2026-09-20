@@ -265,17 +265,18 @@ end
 -- the original, then renames it over the original — the path never changes.
 -- Returns (true) or (nil, err).
 function BOLDONIC:convertOne(path, ratio)
-    local Convert = require("boldonic_convert")
+    local ok, Convert = pcall(require, "boldonic_convert")
+    if not ok then
+        return nil, "conversion module unavailable"
+    end
     ratio = ratio or self:ratio()
     if self:mode() == "replace" then
         local dir = tostring(path):match("^(.*)/[^/]+$") or "."
         local base = tostring(path):match("([^/]+)$") or path
         local stem = base:match("^(.*)%.[^.]+$") or base
         local tmp = dir .. "/." .. stem .. ".boldonic.tmp"
-        local ok, err = Convert.file(path, tmp, ratio)
-        if not ok then
-            return nil, err
-        end
+        local ok, err = pcall(function() return Convert.file(path, tmp, ratio) end)
+        if not ok then return nil, err or "conversion failed" end
         if lfs.rename(tmp, path) then
             return true
         end
@@ -289,16 +290,19 @@ function BOLDONIC:convertOne(path, ratio)
     if not ok_dir then
         return nil, _("could not create the output folder (") .. tostring(err_dir) .. ")"
     end
-    -- Write to a temp file in the same folder, then rename it into place: a
-    -- failed conversion must never delete a pre-existing converted copy, and
-    -- re-converting over an old copy stays atomic.
     local dest_base = out:match("([^/]+)$") or out
     local dest_stem = dest_base:match("^(.*)%.[^.]+$") or dest_base
     local tmp_out = out_dir .. "/." .. dest_stem .. ".boldonic.tmp"
-    local ok, err = Convert.file(path, tmp_out, ratio)
-    if not ok then return nil, err end
+    local ok, err = pcall(function() return Convert.file(path, tmp_out, ratio) end)
+    if not ok then return nil, err or "conversion failed" end
     if lfs.rename(tmp_out, out) then
-        self:recordConversion(path, out)
+        pcall(function()
+            local title = ""
+            pcall(function() title = self:titleForPath(path) or "" end)
+            local ratio_val = self:ratio()
+            local mode = self:mode()
+            pcall(function() return logModule().record(path, out, mode, ratio_val, title) end)
+        end)
         return true
     end
     os.remove(tmp_out)
