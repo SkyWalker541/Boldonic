@@ -145,10 +145,12 @@ function BOLDONIC:isConverted(source_path)
 end
 
 function BOLDONIC:recordConversion(source_path, output_path)
-    local title = self:titleForPath(source_path) or ""
+    local title = ""
+    pcall(function() title = self:titleForPath(source_path) or "" end)
     local ratio = self:ratio()
     local mode = self:mode()
-    return logModule().record(source_path, output_path, mode, ratio, title)
+    pcall(function() return logModule().record(source_path, output_path, mode, ratio, title) end)
+    return true
 end
 
 function BOLDONIC:syncLog()
@@ -158,18 +160,23 @@ end
 -- Optional: get title from document registry for log entry
 function BOLDONIC:titleForPath(path)
     local ok, registry = pcall(require, "document/documentregistry")
-    if ok and registry and registry.openDocument then
-        local doc = registry:openDocument(path)
-        if doc and doc.getProps then
-            local props = doc:getProps()
-            if props and props.title then
-                if doc.close then pcall(doc.close, doc) end
-                return props.title
-            end
-        end
-        if doc and doc.close then pcall(doc.close, doc) end
+    if not ok or not registry or not registry.openDocument then return nil end
+    local doc
+    local ok2, result = pcall(function() return registry:openDocument(path) end)
+    if not ok2 then return nil end
+    doc = result
+    if not doc then return nil end
+    local props
+    local ok3, result2 = pcall(function() return doc:getProps() end)
+    if not ok3 then
+        if doc.close then pcall(doc.close, doc) end
+        return nil
     end
-    return nil
+    props = result2
+    local title = nil
+    if props and props.title then title = props.title end
+    if doc.close then pcall(doc.close, doc) end
+    return title
 end
 
 -- ─────────────────────────── device folder tree ──────────────────────────
