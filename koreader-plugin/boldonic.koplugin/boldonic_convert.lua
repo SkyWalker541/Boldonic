@@ -7,8 +7,6 @@
 -- ffi/archiver is required lazily (only when a conversion actually runs), so
 -- loading the plugin never needs the module — and tests can swap in a fake.
 
-local Boldify = require("boldonic_boldify")
-
 local CONTENT_EXT = {
     xhtml = true,
     html = true,
@@ -32,6 +30,23 @@ function Convert.file(src, dest, ratio, on_entry)
     end
 
     local ok, err = pcall(function()
+        -- Load Boldify inside pcall in case of issues
+        local ok_bold, Boldify = pcall(require, "boldonic_boldify")
+        if not ok_bold or not Boldify then
+            error("boldonic_boldify module unavailable")
+        end
+
+        local CONTENT_EXT_local = {
+            xhtml = true,
+            html = true,
+            htm = true,
+        }
+
+        local function is_content_file_local(name)
+            local ext = name:match("[.]([^.]+)$")
+            return ext ~= nil and CONTENT_EXT_local[string.lower(ext)] == true
+        end
+
         local reader = Arch.Reader:new()
         if not reader:open(src) then
             error("could not open the book (is it a valid EPUB?)")
@@ -52,8 +67,13 @@ function Convert.file(src, dest, ratio, on_entry)
                     ok2, err2 = false, reader.err or ("could not read " .. tostring(entry.path))
                     break
                 end
-                if is_content_file(entry.path) then
-                    content = Boldify.process(content, ratio)
+                if is_content_file_local(entry.path) then
+                    local ok_proc, proc_content = pcall(function() return Boldify.process(content, ratio) end)
+                    if not ok_proc then
+                        ok2, err2 = false, proc_content or "boldify process failed"
+                        break
+                    end
+                    content = proc_content
                 end
                 if not writer:addFileFromMemory(entry.path, content, entry.mtime) then
                     ok2, err2 = false, writer.err or ("could not write " .. tostring(entry.path))
