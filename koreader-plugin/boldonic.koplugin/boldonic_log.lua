@@ -6,15 +6,35 @@ local logger = require("logger")
 
 -- Try to load optional modules, handle gracefully if unavailable
 local ok_json, json = pcall(require, "json")
-local ok_storage, storage = pcall(require, "storage")
 
 local Log = {}
 
 -- Log file lives in KOReader's data directory (survives plugin updates)
+-- Use lfs-based path since storage module may not be available
 local function log_dir()
-    if not ok_storage or not storage then return nil end
-    local dir = storage.getDir() .. "/plugins/data/boldonic"
-    return dir
+    -- Try multiple common KOReader data directory locations
+    local candidates = {
+        "/mnt/us/KOReader",
+        "/mnt/us/KOReader/data",
+        "/mnt/us/KOReader/plugins/data",
+        "/mnt/us/koreader",
+        "/mnt/us/koreader/data",
+        "/mnt/us/koreader/plugins/data",
+        "/mnt/us/books/.koreader",
+        "/mnt/us/books/.koreader/data",
+        "/mnt/us/books/.koreader/plugins/data",
+        os.getenv("KOREADER_DATA_DIR"),
+    }
+    
+    for _, dir in ipairs(candidates) do
+        if dir and lfs.attributes(dir, "mode") == "directory" then
+            local boldonic_dir = dir .. "/plugins/data/boldonic"
+            if lfs.attributes(boldonic_dir, "mode") == "directory" or lfs.mkdir(boldonic_dir) then
+                return boldonic_dir
+            end
+        end
+    end
+    return nil
 end
 
 local function log_path()
@@ -60,6 +80,7 @@ function Log.save(data)
     local content = json.encode(data)
     f:write(content)
     f:close()
+    -- Use os.rename instead of lfs.rename (may not exist on all builds)
     if not os.rename(tmp, path) then
         os.remove(tmp)
         return false, "could not rename log file"

@@ -274,7 +274,7 @@ function BOLDONIC:convertOne(path, ratio)
         local tmp = dir .. "/." .. stem .. ".boldonic.tmp"
         local ok, err = Convert.file(path, tmp, ratio)
         if not ok then return nil, err end
-        if lfs.rename(tmp, path) then
+        if os.rename(tmp, path) then
             return true
         end
         os.remove(tmp)
@@ -292,7 +292,7 @@ function BOLDONIC:convertOne(path, ratio)
     local tmp_out = out_dir .. "/." .. dest_stem .. ".boldonic.tmp"
     local ok, err = Convert.file(path, tmp_out, ratio)
     if not ok then return nil, err end
-    if lfs.rename(tmp_out, out) then
+    if os.rename(tmp_out, out) then
         pcall(function()
             local title = ""
             pcall(function() title = self:titleForPath(path) or "" end)
