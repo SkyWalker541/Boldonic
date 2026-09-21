@@ -1,41 +1,47 @@
+<p align="center">
+  <img src="logo.png" width="160" alt="Boldonic" />
+</p>
+
 # Boldonic
 
-**Boldonic** is a KOReader plugin that re-renders EPUB ebooks with a larger share of each word in bold — an assistive reading comfort feature. It makes text easier to read by bolding the first characters of each word, guiding the eye through the text.
+Re-render EPUB ebooks with a larger share of each word in **bold** — an assistive reading comfort feature. Converts a copy (keeps the original) or replaces the file; destination folder is your choice, any depth.
 
-## Features
+## What it does
 
-- **Smart bolding engine** — Bolds the leading portion of each word (configurable ratio 10–90%), preserving readability while adding visual weight
-- **Two conversion modes:**
-  - **Copy original** (default) — Creates a `<book>_boldonic.epub` sibling file, keeps original untouched
-  - **Replace original** — Rewrites the file in place, preserving reading progress & annotations
-- **Flexible output** — Save copies next to the original or in any folder on the device
-- **Full-screen dashboard** — Storefront-style UI with three tabs:
-  - **Convert A File** — Device-wide EPUB picker with search, multi-select, real titles
-  - **Settings** — Ratio, mode, destination folder
-  - **About** — Version & how it works
-- **Persistent conversion log** — Tracks converted books across folders, survives plugin updates
-- **Duplicate protection** — Flags already-converted books, confirms before re-converting
-- **Offline & private** — No network access, everything runs on-device
+- A full-screen Boldonic dashboard (**Convert A File** / **Settings** / **About**) inside KOReader's Tools menu.
+- **Convert A File** scans your device and lists only **EPUB** files (case-insensitive): search and multi-pick from the list, or convert the file you're currently reading.
+- **Settings** — Ratio presets (Light/Medium/Strong/Custom), copy/replace mode, destination folder (any depth, create new folders).
+- **About** — Version info and how it works.
+- **Persistent conversion log** — Tracks converted books by source path, survives plugin updates, works across destination folders.
+- **Duplicate protection** — Flags already-converted books, shows "Convert again" confirmation before overwriting.
+- **Offline & private** — No network access, all processing on-device.
 
-## Installation
+## Screenshots
 
-1. Download the latest `boldonic.koplugin.zip` from [Releases](https://github.com/SkyWalker541/Boldonic/releases)
-2. Unzip into `koreader/plugins/` on your device so you have `koreader/plugins/boldonic.koplugin/`
-3. Restart KOReader
-4. Open the menu → **Boldonic** to open the dashboard
+The three tabs of the dashboard:
 
-## Usage
+| **Convert A File** — pick files and the destination folder | **Settings** — ratio, mode, destination | **About** — version & how it works |
+|:---:|:---:|:---:|
+| <img src="screenshots/convert-a-file-tab.png" width="280" alt="Convert A File tab: pick files and destination folder" /> | <img src="screenshots/settings-tab.png" width="280" alt="Settings tab: ratio, mode, destination folder" /> | <img src="screenshots/about-tab.png" width="280" alt="About tab: version and how it works" /> |
 
-1. Open the **Boldonic** dashboard from the menu
-2. **Convert A File** tab — Tap "Click Here To Convert File(s)" to pick EPUBs, or tap the "Currently open" row for one-tap conversion
-3. **Settings** tab — Adjust bolding ratio, choose copy/replace mode, set output folder
-4. **About** tab — Version info & how it works
+The picker and the destination browser:
 
-## Requirements
+| **File picker** — only EPUBs, searchable and paged | **Destination browser** — folder tree with create/new folder |
+|:---:|:---:|
+| <img src="screenshots/convert-a-file-tab.png" width="360" alt="File picker: EPUBs listed, searchable, paged" /> | <img src="screenshots/settings-tab.png" width="360" alt="Destination browser: folder tree with create new folder" /> |
 
-- KOReader with `ffi/archiver` support (standard on recent builds)
-- EPUB files (other formats not supported)
+## Setup
 
-## License
+1. On your device, copy `boldonic.koplugin/` into KOReader's `plugins/` folder and restart KOReader — or install straight from **Storefront** (search "Boldonic").
+2. Open **Tools → Boldonic** to open the dashboard.
+3. Use **Convert A File** to pick EPUBs and choose a destination folder.
+4. Adjust **Settings** for bolding ratio, copy/replace mode, and output folder.
 
-MIT — see [LICENSE](LICENSE)
+## Build & test
+
+```sh
+./scripts/build-zip.sh             # → releases/Boldonic-Plugin.zip
+luajit koreader-plugin/test/harness_boldonic.lua
+```
+
+See `AGENTS.md` for repo conventions. GitHub Actions checks the Lua, runs the harness, and builds the zip on each push/PR.
