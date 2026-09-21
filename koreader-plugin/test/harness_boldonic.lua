@@ -366,6 +366,13 @@ os.remove = function(p)
     return REAL_os_remove(real_path(p))
 end
 
+-- Route the plugin's os.rename() through the same door (the plugin uses
+-- os.rename on-device because some builds ship no lfs.rename).
+local REAL_os_rename = os.rename
+os.rename = function(src, dst)
+    return REAL_os_rename(real_path(src), real_path(dst))
+end
+
 -- ── fake epub archive (ffi/archiver) ────────────────────────────────────
 -- Reader opens a MANIFEST (registered per source path), Writer accumulates
 -- entries and writes a real (concatenated) file into the backing tree so the
@@ -955,8 +962,10 @@ check("landing leads with the pick action",
 check("landing shows the currently-open EPUB row",
     find_text(landing, "tap to convert", true) ~= nil)
 check("landing summarises the saved settings",
-    find_text(landing, "Ratio:", true) ~= nil
-        and find_text(landing, "Destination:", true) ~= nil)
+    find_text(landing, "Selected Settings", true) ~= nil
+        and find_text(landing, "Bolding ratio", true) ~= nil
+        and find_text(landing, "Keep original", true) ~= nil
+        and find_text(landing, "Output folder", true) ~= nil)
 
 -- Tab switching: Settings landing on the other tab, then back.
 home:showTab("settings")
@@ -970,9 +979,10 @@ check("Settings holds the ratio presets",
 check("Settings holds the keep-the-original modes",
     find_text(settings_vg, "Copy original", true) ~= nil
         and find_text(settings_vg, "Replace original") ~= nil)
-check("Settings holds the destination row and the guide",
-    find_text(settings_vg, "Destination folder") ~= nil
-        and find_text(settings_vg, "How it works", true) ~= nil)
+check("Settings holds the destination row",
+    find_text(settings_vg, "Destination folder") ~= nil)
+home:showTab("about")
+home:showTab("settings")
 home:showTab("convert")
 check("showTab('convert') back to the Convert tab",
     home.tab == "convert")
